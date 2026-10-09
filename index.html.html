@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm Ôn Tập - Kiểm Tra Tức Thì</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .quiz-option { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Hiệu ứng khi chọn đúng */
+        .correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        .correct .opt-letter { background-color: #22c55e !important; color: white !important; border-color: #22c55e !important; }
+        /* Hiệu ứng khi chọn sai */
+        .wrong { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .wrong .opt-letter { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+        /* Chặn copy */
+        * { -webkit-user-select: none; user-select: none; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <div class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm mb-10">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600">Hệ Thống Trắc Nghiệm</h1>
+            <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+                <span class="text-sm font-bold text-blue-700">Đúng: <span id="correct-count">0</span></span>
+                <span class="mx-2 text-gray-300">|</span>
+                <span class="text-sm font-bold text-red-600">Sai: <span id="wrong-count">0</span></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz-container" class="max-w-4xl mx-auto px-6 space-y-8">
+        </div>
+
+    <script>
+        // 1. ĐỔI TÊN BIẾN CHO KHỚP VỚI HÀM RENDER
+        const QUESTIONS = [
+            { q: "Các phần tử HTML (HTML elements) được đại diện bằng?", options: ["Thẻ tag", "thuộc tính", "phương thức", "hàm"], ans: 0 },
+            { q: "Để upload tập tin lên server ta sử dụng phần tử nào sau đây?", options: ["<input type=\"radio\">", "<input type=\"checkbox\">", "<input type=\"file\">", "<input type=\"password\">"], ans: 2 },
+            { q: "Giá trị của thuộc tính for phải giống như giá trị thuộc tính id của thẻ nào sau đây?", options: ["<form>", "<input>", "<label>", "<textarea>"], ans: 1 },
+            { q: "Nếu một trường <input> không sử dụng thuộc tính name thì sẽ như thế nào?", options: ["Không tự động autofocus", "Lỗi cú pháp", "Khi nhấn vào label sẽ không focus vào trường input đó", "Giá trị của trường input đó sẽ không được submit lên server"], ans: 3 },
+            { q: "Phần tử nào sau đây cho phép đặt lại tất cả các giá trị của form về giá trị mặc định?", options: ["<input type=\"email\">", "<input type=\"text\">", "<input type=\"reset\">", "<input type=\"password\">"], ans: 2 },
+            { q: "Phần tử nào sau đây cho phép người dùng chọn một lựa chọn trong các tùy chọn đã cho?", options: ["<input type=\"radio\">", "<input type=\"text\">", "<input type=\"reset\">", "<input type=\"password\">"], ans: 0 },
+            { q: "Phần tử nào sau đây cho phép người dùng có thể không chọn lựa chọn nào trong các mục đã cho?", options: ["<input type=\"radio\">", "<input type=\"checkbox\">", "<input type=\"reset\">", "<input type=\"password\">"], ans: 1 },
+            { q: "Phần tử nào sau đây cho phép người dùng nhập mật khẩu?", options: ["<input type=\"email\">", "<input type=\"text\">", "<input type=\"reset\">", "<input type=\"password\">"], ans: 3 },
+            { q: "Phần tử nào sau đây cho phép người dùng nhập văn bản trên một dòng đơn?", options: ["<input type=\"email\">", "<input type=\"text\">", "<input type=\"reset\">", "<input type=\"password\">"], ans: 1 },
+            { q: "Phần tử nào sau đây cho phép tạo nút bấm để gởi dữ liệu form lên server?", options: ["<input type=\"radio\">", "<input type=\"submit\">", "<input type=\"button\">", "<input type=\"password\">"], ans: 1 },
+            { q: "Phần tử nào sau đây hiển thị khoảng số bằng thanh trượt (slider control) cho người dùng lựa chọn một giá trị số?", options: ["<input type=\"radio\">", "<input type=\"submit\">", "<input type=\"button\">", "<input type=\"range\">"], ans: 3 },
+            { q: "Thẻ <input> sử dụng thuộc tính nào để xác định kiểu hiển thị?", options: ["Type", "Value", "Placeholder", "Pattern"], ans: 0 },
+            { q: "CSS selector nào để chọn thẻ con trực tiếp của thẻ khác?", options: ["element > element", "element element", "element element (space)", "element + element"], ans: 0 },
+            { q: "CSS selector nào để chọn toàn bộ các phần tử ?", options: ["*", "html", "body", "$"], ans: 0 },
+            { q: "Cú pháp css nào dùng để chuyển tất cả các thẻ <p> sang chữ đậm?", options: ["p {text-size:bold}", "p {font-weight:bold}", "<p style=\"text-size:bold\">", "<p style=\"font-weight:bold\">"], ans: 1 },
+            { q: "Cú pháp css nào sau đây là chuẩn xác:", options: ["body {color:black}", "body:color=black", "{body:color=black(body}", "{body;color:black}"], ans: 0 },
+            { q: "Đáp án nào đúng khi nói về ID & class ?", options: ["Một thẻ có thể đặt nhiều hơn 1 ID.", "Có thể dùng dấu gạch ngang để đặt nhiều class", "Có thể đặt nhiều class cách nhau bằng dấu cách", "Đã đặt ID thì không được đặt class."], ans: 2 },
+            { q: "Giá trị mặc định của thuộc tính position là gì?", options: ["absolute", "relative", "fixed", "static"], ans: 3 },
+            { q: "Làm thế nào để chọn tất cả các phần tử p bên trong một phần tử div?", options: ["div + p", "div p", "div.p", "Tất cả đáp án đúng"], ans: 1 },
+            { q: "Làm thế nào để chuyển font của 1 thẻ bất kỳ?", options: ["font-face", "font-family", "font-type", "font-style:"], ans: 1 },
+            { q: "Làm thế nào để gán màu nền vào tất cả các thẻ <h1>?", options: ["all.h1 {background-color:#FFFFFF}", "hl.all {background-color:#FFFFFF}", "h1 {background-color:#FFFFFF}", "h1 {bgcolor:#FFFFFF}"], ans: 2 },
+            { q: "Làm thế nào để hiển thị đường dẫn hyperlink không gạch dưới?", options: ["a {decoration:no underline}", "a {text-decoration:no underline}", "a {underline:none}", "a {text-decoration:none}"], ans: 3 },
+            { q: "Làm thế nào để hiển thị nội dung text dưới dạng chữ đậm?", options: ["font:bold;", "style:bold;", "font-weight:bold;", "font-type:bold;"], ans: 2 },
+            { q: "Để hiển thị border: Viền trên 10px, dưới 15px, trái 20px, phải 5px thì dùng:", options: ["border-width: 10px 20px 5px 15px", "border-width: 10px 5px 15px 20px", "border-width: 10px 5px 20px 15px", "border-width: 5px 20px 10px 15px"], ans: 1 },
+            { q: "Làm thế nào để tạo danh sách với biểu tượng đầu danh sách là ô vuông?", options: ["list: square", "list-style-type: square", "list-type: square", "style-type: square"], ans: 1 },
+            { q: "Làm thế nào để thay đổi lề trái của thẻ bất kì?", options: ["padding:", "indent:", "margin-left:", "text-indent:"], ans: 2 },
+            { q: "Cú pháp CSS chính xác để in đậm toàn bộ thành phần <span> là gì?", options: ["span {font-weight: bold} span {text-size: bold}", "span {font-weight: bold}", "<span style='font-size: bold'>", "<span style='text-size: bold'>"], ans: 1 },
+            { q: "Cú pháp CSS chính xác là:", options: ["{p:color=black(p}", "p {color: black;}", "{p;color:black}", "p:color=black"], ans: 1 },
+            { q: "Tạo ID header có rộng 750px, cao 30px và chữ màu đen?", options: ["#header { height: 30px; width: 750px; color: black; }", ".header { height: 30px; width: 750px; colour: black; }", "#header { height: 30px; width: 750px; text: black; }", ".header { height: 30px; width: 750px; color: black; }"], ans: 0 },
+            { q: "Thuộc tính padding có thể gán giá trị âm không?", options: ["Có", "Không", "Chỉ ở vài trường hợp", "Tùy trình duyệt"], ans: 1 },
+            { q: "Dòng nào đặt ảnh hinh.jpg làm ảnh nền trang web?", options: ["bg-image:hinh.jpg", "background-image:hinh.jpg", "background-image:url=hinh.jpg", "background-image:url(hinh.jpg)"], ans: 3 },
+            { q: "Dòng nào để thiết lập ảnh nền cố định?", options: ["background-attachment: fix", "background-attachment: fixed", "background-attachment: scroll", "Tất cả đều sai"], ans: 1 },
+            { q: "Snippet CSS nào thường dùng để căn giữa một web theo chiều ngang?", options: ["site-align: center;", "margin: center;", "margin: auto 0;", "margin: 0 auto;"], ans: 3 },
+            { q: "text-transform: uppercase dùng để định dạng hiệu ứng gì?", options: ["in hoa", "in hoa kí tự đầu tiên", "in thường", "không áp dụng"], ans: 0 },
+            { q: "Thuộc tính z-index dùng để làm gì?", options: ["Định vị tương đối", "Quy định kiểu viền", "Tạo màu sắc liên kết", "Đặt các thành phần ở các lớp khác nhau"], ans: 3 }
+        ];
+
+        let correctScore = 0;
+        let wrongScore = 0;
+        const answeredQuestions = new Set();
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            // Dùng hàm escape để tránh lỗi hiển thị các thẻ HTML trong câu hỏi/đáp án
+            const escape = (text) => text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+            container.innerHTML = QUESTIONS.map((q, qIdx) => `
+                <div class="bg-white rounded-[2rem] p-8 shadow-xl border border-gray-100 transition-all hover:border-blue-200">
+                    <div class="flex gap-5 mb-8">
+                        <span class="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-black text-xl italic shadow-lg transform -rotate-6">
+                            ${qIdx + 1}
+                        </span>
+                        <h4 class="text-xl font-bold text-gray-800 pt-1 leading-snug">${escape(q.q)}</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:pl-16">
+                        ${q.options.map((opt, optIdx) => `
+                            <button 
+                                id="btn-${qIdx}-${optIdx}" 
+                                onclick="checkAnswer(${qIdx}, ${optIdx})"
+                                class="quiz-option group p-5 rounded-2xl bg-slate-50 border-2 border-transparent text-left flex items-center gap-4 w-full"
+                            >
+                                <span class="opt-letter w-10 h-10 flex-shrink-0 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center font-bold text-gray-400 group-hover:border-blue-300 transition-colors shadow-sm">
+                                    ${String.fromCharCode(65 + optIdx)}
+                                </span>
+                                <span class="option-text text-[15px] font-semibold text-gray-600 group-hover:text-blue-700">${escape(opt)}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="feedback-${qIdx}" class="mt-6 ml-16 hidden font-bold text-sm italic"></div>
+                </div>
+            `).join('');
+        }
+
+        function checkAnswer(qIdx, selectedIdx) {
+            if (answeredQuestions.has(qIdx)) return;
+            answeredQuestions.add(qIdx);
+
+            const correctIdx = QUESTIONS[qIdx].ans;
+            const selectedBtn = document.getElementById(`btn-${qIdx}-${selectedIdx}`);
+            const correctBtn = document.getElementById(`btn-${qIdx}-${correctIdx}`);
+            const feedback = document.getElementById(`feedback-${qIdx}`);
+
+            feedback.classList.remove('hidden');
+
+            if (selectedIdx === correctIdx) {
+                selectedBtn.classList.add('correct');
+                correctScore++;
+                document.getElementById('correct-count').innerText = correctScore;
+                feedback.innerText = "✓ Chính xác!";
+                feedback.className = "mt-6 ml-16 font-bold text-green-600 italic";
+            } else {
+                selectedBtn.classList.add('wrong');
+                correctBtn.classList.add('correct');
+                wrongScore++;
+                document.getElementById('wrong-count').innerText = wrongScore;
+                feedback.innerText = "✗ Sai rồi! Đáp án đúng là " + String.fromCharCode(65 + correctIdx);
+                feedback.className = "mt-6 ml-16 font-bold text-red-600 italic";
+            }
+
+            QUESTIONS[qIdx].options.forEach((_, i) => {
+                const btn = document.getElementById(`btn-${qIdx}-${i}`);
+                if (i !== selectedIdx && i !== correctIdx) {
+                    btn.style.opacity = "0.5";
+                }
+                btn.style.cursor = "default";
+            });
+        }
+
+        window.onload = renderQuiz;
+    </script>
+</body>
+</html>
